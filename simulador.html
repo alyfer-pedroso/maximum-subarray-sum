@@ -1,0 +1,1693 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Simulador Soma Máxima</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+:root {
+  --bg: #eef1f5;
+  --surface: #f7f9fb;
+  --panel: #ffffff;
+  --line: #d4dae3;
+  --fg: #17202c;
+  --muted: #5a6575;
+  --cubic: #a92a5e;
+  --cubic-soft: #f2d3df;
+  --quad: #0a7470;
+  --quad-soft: #cbe9e7;
+  --best: #a86b10;
+  --heat-pos: #c77612;
+  --heat-neg: #3f6aa6;
+  --bar: #8e9aab;
+  --bar-neg: #c3cbd6;
+  --code-bg: #f1f4f8;
+  --code-hl: #fff3d6;
+  --ok: #1f7a3d;
+  --overlay: rgba(14, 19, 26, 0.55);
+  --font: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e131a;
+    --surface: #141b24;
+    --panel: #18212c;
+    --line: #2a3543;
+    --fg: #e5eaf1;
+    --muted: #94a1b3;
+    --cubic: #ee6f9f;
+    --cubic-soft: #4a2335;
+    --quad: #3ec4bd;
+    --quad-soft: #163c3b;
+    --best: #e5a94d;
+    --heat-pos: #e39a3c;
+    --heat-neg: #6f95cc;
+    --bar: #627084;
+    --bar-neg: #394454;
+    --code-bg: #121922;
+    --code-hl: #3a3016;
+    --ok: #5bc17d;
+    --overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e131a;
+  --surface: #141b24;
+  --panel: #18212c;
+  --line: #2a3543;
+  --fg: #e5eaf1;
+  --muted: #94a1b3;
+  --cubic: #ee6f9f;
+  --cubic-soft: #4a2335;
+  --quad: #3ec4bd;
+  --quad-soft: #163c3b;
+  --best: #e5a94d;
+  --heat-pos: #e39a3c;
+  --heat-neg: #6f95cc;
+  --bar: #627084;
+  --bar-neg: #394454;
+  --code-bg: #121922;
+  --code-hl: #3a3016;
+  --ok: #5bc17d;
+  --overlay: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: clamp(14px, 1.45vh, 17px);
+  line-height: 1.45;
+}
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding-block: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 700; letter-spacing: -0.01em; }
+h1 { font-size: clamp(24px, 3.4vh, 40px); line-height: 1.1; }
+h2 { font-size: clamp(17px, 2vh, 22px); }
+.stage-head { display: flex; flex-wrap: wrap; gap: 10px 32px; align-items: end; justify-content: space-between; }
+.scene-copy { display: grid; gap: 4px; flex: 1 1 520px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.scene-copy p { margin: 0; color: var(--muted); font-size: clamp(15px, 1.8vh, 20px); max-width: 80ch; }
+.head-side { display: grid; gap: 6px; justify-items: end; flex: 0 1 auto; min-width: 0; }
+.formulas { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.formula {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  white-space: nowrap;
+}
+.formula b { font-weight: 600; }
+.formula.cubic b { color: var(--cubic); }
+.formula.quad b { color: var(--quad); }
+.dataset-info { margin: 0; font-size: 13px; color: var(--muted); text-align: right; overflow-wrap: anywhere; }
+.dataset-info code { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg); }
+.stage { min-height: 0; overflow: auto; display: grid; }
+.lanes { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); min-height: 0; }
+.lane {
+  --lane: var(--cubic);
+  --lane-soft: var(--cubic-soft);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--lane);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: "head" "visual" "code" "stats";
+  min-width: 0;
+  min-height: 0;
+  container-type: inline-size;
+}
+.lane[data-lane="quadratica"] { --lane: var(--quad); --lane-soft: var(--quad-soft); }
+.lane-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.lane-head > div { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.lane-tag { font-size: 13px; color: var(--muted); }
+.badge {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--lane);
+  border: 1.5px solid var(--lane);
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+.status {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: var(--muted);
+}
+.status[data-state="running"] { background: var(--lane-soft); color: var(--lane); }
+.status[data-state="done"] { background: var(--lane); color: var(--panel); }
+.visual { --visual-h: clamp(110px, 17vh, 230px); grid-area: visual; display: grid; grid-template-columns: minmax(0, 1fr) var(--visual-h); gap: 12px; }
+.array-canvas { display: block; width: 100%; height: var(--visual-h); min-width: 0; }
+.heat-frame { position: relative; width: var(--visual-h); height: var(--visual-h); max-width: 100%; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.heat-canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.heat-label { position: absolute; left: 4px; bottom: 2px; font-size: 10px; font-family: var(--font-mono); color: var(--muted); pointer-events: none; }
+.marker { position: absolute; min-width: 6px; min-height: 6px; transform: translate(-50%, -50%); pointer-events: none; }
+.marker.current { border: 2px solid var(--fg); }
+.marker.best { border: 2px dashed var(--best); }
+.code {
+  grid-area: code;
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+}
+.code ol {
+  position: relative;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  overflow: auto;
+  scroll-behavior: smooth;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.4vh, 16px);
+  line-height: 1.5;
+  counter-reset: linha;
+}
+.code li { counter-increment: linha; white-space: pre; padding-right: 12px; border-left: 4px solid transparent; }
+.code li::before {
+  content: counter(linha);
+  display: inline-block;
+  width: 3em;
+  padding-right: 1em;
+  text-align: right;
+  color: var(--muted);
+  opacity: 0.55;
+}
+.code li.active { background: var(--code-hl); border-left-color: var(--lane); }
+.code li.active::before { color: var(--lane); opacity: 1; font-weight: 700; }
+.tok-kw { color: var(--lane); font-weight: 600; }
+.narration {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  font-size: clamp(15px, 1.85vh, 21px);
+  font-weight: 500;
+  min-height: 3.3em;
+  background: var(--panel);
+}
+.stats { grid-area: stats; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 0; align-content: start; }
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  align-content: start;
+}
+.stat dt { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.stat dd { margin: 0; font-family: var(--font-mono); font-size: clamp(13px, 1.6vh, 19px); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat dd small { color: var(--muted); font-size: 0.72em; }
+.stat.best dd { color: var(--best); font-weight: 700; }
+.stat.flash { animation: flash 0.6s ease-out; }
+@keyframes flash { from { background: var(--code-hl); } to { background: var(--surface); } }
+.meter { height: 6px; border-radius: 3px; background: var(--code-bg); overflow: hidden; margin-top: 4px; }
+.meter i { display: block; height: 100%; width: 0; background: var(--lane); }
+@container (max-width: 640px) {
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container (min-width: 1100px) {
+  .lane {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas: "head head" "visual visual" "code stats";
+  }
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+.analysis {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(16px, 2.4vh, 28px);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  align-content: start;
+}
+.analysis section { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.race { display: grid; gap: 10px; }
+.race-row { display: grid; gap: 4px; }
+.race-row header { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; flex-wrap: wrap; }
+.race-row header b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.race-track { height: 22px; border-radius: 6px; background: var(--code-bg); overflow: hidden; position: relative; }
+.race-track i { position: absolute; inset: 0 auto 0 0; display: block; }
+.race-track .theory-fill { background: var(--line); }
+.race-row.cubic .done-fill { background: var(--cubic); }
+.race-row.quad .done-fill { background: var(--quad); }
+.headline { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.headline strong { font-size: clamp(40px, 7vh, 76px); line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.headline span { color: var(--muted); font-size: 16px; max-width: 40ch; }
+.theory { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 14px; margin: 0; font-size: 15px; align-items: baseline; }
+.theory dt { color: var(--muted); }
+.theory dd { margin: 0; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.theory dd.value { color: var(--fg); text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 15px; }
+.checks li { display: flex; gap: 8px; align-items: baseline; }
+.checks li::before { content: "…"; font-family: var(--font-mono); color: var(--muted); width: 1.2em; flex: none; }
+.checks li[data-ok="true"]::before { content: "✓"; color: var(--ok); font-weight: 700; }
+.checks li[data-ok="false"]::before { content: "✗"; color: var(--cubic); font-weight: 700; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+th:first-child, td:first-child { text-align: left; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.current td { background: var(--code-hl); font-weight: 600; }
+td.mono { font-family: var(--font-mono); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.legend .swatch-cubic { background: var(--cubic); }
+.legend .swatch-quad { background: var(--quad); }
+.legend .swatch-theory { background: var(--line); }
+.controls {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+.group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.group.end { margin-left: auto; }
+.scenes { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.scenes button { width: 34px; padding: 7px 0; font-family: var(--font-mono); }
+.scenes button[aria-current="step"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+select, input[type="number"] {
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  max-width: 100%;
+}
+input[type="number"] { width: 118px; font-family: var(--font-mono); }
+.segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.segmented label { position: relative; }
+.segmented input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segmented span { display: block; padding: 6px 11px; font-size: 14px; font-weight: 500; background: var(--panel); border-right: 1px solid var(--line); cursor: pointer; }
+.segmented label:last-child span { border-right: 0; }
+.segmented input:checked + span { background: var(--fg); color: var(--bg); }
+.segmented input:focus-visible + span { outline: 2px solid var(--quad); outline-offset: -2px; }
+.speed { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.speed input { accent-color: var(--fg); }
+.speed input { width: 110px; }
+.speed output { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; min-width: 8em; }
+.settings { position: relative; }
+.settings summary { list-style: none; cursor: pointer; font-size: 14px; font-weight: 600; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+.settings summary::-webkit-details-marker { display: none; }
+.settings[open] summary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.settings summary:focus-visible { outline: 2px solid var(--quad); outline-offset: 2px; }
+.settings-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 15;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.45);
+}
+.settings-panel label.field, .settings-panel .field { display: grid; gap: 4px; }
+.settings-panel .field > span { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--muted); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--quad); outline-offset: 2px; }
+button.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); min-width: 100px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.help { position: fixed; inset: 0; z-index: 20; background: var(--overlay); display: grid; place-items: center; padding: 16px; }
+.help-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 26px; width: min(560px, 100%); display: grid; gap: 14px; }
+.help-card dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin: 0; font-size: 15px; }
+.help-card dd { margin: 0; color: var(--muted); }
+kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; background: var(--surface); white-space: nowrap; }
+@media (max-width: 900px), (max-height: 560px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-rows: none; }
+  .stage { overflow: visible; }
+  .head-side { justify-items: start; }
+  .formulas { justify-content: flex-start; }
+  .dataset-info { text-align: left; }
+  .group.end { margin-left: 0; }
+  .visual { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .array-canvas { height: 170px; }
+  .heat-frame { height: auto; width: min(220px, 100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat.flash { animation: none; }
+}
+</style>
+
+<div class="app">
+  <header class="stage-head">
+    <div class="scene-copy">
+      <span class="eyebrow">Projeto 10 · Soma Máxima de Subvetor · Cena <span id="scene-number">1</span> de <span id="scene-total">7</span></span>
+      <h1 id="scene-title">O problema</h1>
+      <p id="scene-text"></p>
+    </div>
+    <div class="head-side">
+      <div class="formulas">
+        <span class="formula cubic"><b>T₃(n)</b> = n(n+1)(n+2)/6</span>
+        <span class="formula quad"><b>T₂(n)</b> = n(n+1)/2</span>
+        <span class="formula"><b>T₃/T₂</b> = (n+2)/3</span>
+      </div>
+      <p class="dataset-info" id="dataset-info"></p>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="lanes" id="lanes"></div>
+    <div class="analysis" id="analysis" hidden>
+      <section>
+        <h2 id="analysis-title">Análise</h2>
+        <div class="headline"><strong id="ratio-value"></strong><span id="ratio-caption"></span></div>
+        <div class="race" id="race"></div>
+        <dl class="theory" id="theory"></dl>
+        <ul class="checks" id="checks"></ul>
+      </section>
+      <section>
+        <h2>Resultados de referência</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>n</th><th>Soma</th><th>Intervalo</th><th>Somas T₃</th><th>Somas T₂</th><th>T₃/T₂</th><th>Cúbica ms</th><th>Quadr. ms</th></tr>
+            </thead>
+            <tbody id="reference"></tbody>
+          </table>
+        </div>
+        <p class="note">resultados/resultados.csv · semente 20261020 · GCC 14.2.0, -O2, Linux x86_64. Tempo por execução (mediana de 5 amostras). As contagens são exatas e não dependem da máquina.</p>
+        <div class="legend">
+          <span><i class="swatch-cubic"></i>abordagem cúbica</span>
+          <span><i class="swatch-quad"></i>abordagem quadrática</span>
+          <span><i class="swatch-theory"></i>total previsto pela fórmula</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <form class="controls" id="toolbar">
+    <div class="group">
+      <button type="button" id="prev" aria-label="Cena anterior">‹</button>
+      <ol class="scenes" id="scene-list"></ol>
+      <button type="button" id="next" aria-label="Próxima cena">›</button>
+    </div>
+    <div class="group">
+      <button type="button" class="primary" id="play">Executar</button>
+      <button type="button" id="step">Passo</button>
+      <button type="button" id="finish">Concluir</button>
+      <button type="button" id="reset">Reiniciar</button>
+    </div>
+    <label class="speed">
+      <span>Velocidade</span>
+      <input type="range" id="speed" min="0" max="100" value="14">
+      <output id="speed-label" for="speed"></output>
+    </label>
+    <div class="group end">
+      <details class="settings" id="settings">
+        <summary>Ajustes</summary>
+        <div class="settings-panel">
+      <label class="field"><span>Entrada</span>
+      <select id="dataset">
+        <optgroup label="Casos de teste">
+          <option value="classico">Exemplo clássico · n = 9</option>
+          <option value="negativos">Todos negativos · n = 6</option>
+          <option value="positivos">Todos positivos · n = 4</option>
+          <option value="zeros">Vetor de zeros · n = 3</option>
+          <option value="unitario">Um elemento · n = 1</option>
+          <option value="empate">Empate · n = 3</option>
+          <option value="misto">Valores mistos · n = 6</option>
+          <option value="longo">Soma acima de INT_MAX · n = 3</option>
+        </optgroup>
+        <optgroup label="Aleatório (xorshift32)">
+          <option value="aleatorio12">Aleatório · n = 12</option>
+          <option value="aleatorio25">Aleatório · n = 25</option>
+        </optgroup>
+        <optgroup label="Experimentos do relatório">
+          <option value="exp50">Experimento · n = 50</option>
+          <option value="exp100">Experimento · n = 100</option>
+          <option value="exp300">Experimento · n = 300</option>
+          <option value="exp500">Experimento · n = 500</option>
+        </optgroup>
+      </select>
+      </label>
+      <label class="field" id="seed-field"><span>Semente do xorshift32</span>
+        <input type="number" id="seed" min="1" max="4294967295" step="1" value="20261020">
+      </label>
+      <div class="field">
+        <span>Algoritmos</span>
+        <div class="segmented" role="radiogroup" aria-label="Algoritmos visíveis">
+          <label><input type="radio" name="mode" id="mode-both" value="ambos" checked><span>Comparar</span></label>
+          <label><input type="radio" name="mode" id="mode-cubic" value="cubica"><span>Cúbica</span></label>
+          <label><input type="radio" name="mode" id="mode-quad" value="quadratica"><span>Quadrática</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <span>Tela</span>
+        <div class="segmented" role="radiogroup" aria-label="Tela">
+          <label><input type="radio" name="view" id="view-sim" value="simulacao" checked><span>Simulação</span></label>
+          <label><input type="radio" name="view" id="view-analysis" value="analise"><span>Análise</span></label>
+        </div>
+      </div>
+        </div>
+      </details>
+      <button type="button" id="theme" aria-label="Alternar modo claro e escuro"></button>
+      <button type="button" id="fullscreen">Tela cheia</button>
+      <button type="button" id="help-open" aria-label="Atalhos de teclado">?</button>
+    </div>
+  </form>
+</div>
+
+<div class="help" id="help" hidden>
+  <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <h2 id="help-title">Atalhos para apresentar</h2>
+    <dl>
+      <dt><kbd>Espaço</kbd></dt><dd>Executar ou pausar</dd>
+      <dt><kbd>→</kbd></dt><dd>Avançar um passo (uma linha do código)</dd>
+      <dt><kbd>PgDn</kbd> <kbd>↓</kbd></dt><dd>Próxima cena (funciona com passador de slides)</dd>
+      <dt><kbd>PgUp</kbd> <kbd>↑</kbd></dt><dd>Cena anterior</dd>
+      <dt><kbd>1</kbd> … <kbd>7</kbd></dt><dd>Ir direto para uma cena</dd>
+      <dt><kbd>C</kbd></dt><dd>Concluir a execução</dd>
+      <dt><kbd>R</kbd></dt><dd>Reiniciar a cena</dd>
+      <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Aumentar ou diminuir a velocidade</dd>
+      <dt><kbd>A</kbd></dt><dd>Alternar entre simulação e análise</dd>
+      <dt><kbd>F</kbd></dt><dd>Tela cheia</dd>
+      <dt><kbd>T</kbd></dt><dd>Alternar modo claro e escuro</dd>
+      <dt><kbd>?</kbd> <kbd>Esc</kbd></dt><dd>Abrir ou fechar esta ajuda</dd>
+    </dl>
+    <button type="button" class="primary" id="help-close">Fechar</button>
+  </div>
+</div>
+
+<template id="lane-template">
+  <section class="lane">
+    <header class="lane-head">
+      <div>
+        <h2 data-field="title"></h2>
+        <span class="lane-tag" data-field="tag"></span>
+      </div>
+      <span class="badge" data-field="badge"></span>
+      <span class="status" data-field="status"></span>
+    </header>
+    <div class="visual">
+      <canvas class="array-canvas" data-field="array"></canvas>
+      <div class="heat-frame" title="Mapa dos intervalos: linha i é o início, coluna j é o fim; a cor é a soma">
+        <canvas class="heat-canvas" data-field="heat"></canvas>
+        <span class="marker best" data-field="heat-best" hidden></span>
+        <span class="marker current" data-field="heat-current" hidden></span>
+        <span class="heat-label">i ↓ · j →</span>
+      </div>
+    </div>
+    <div class="code">
+      <div class="code-head"><span>src/max_subarray.c</span><span data-field="line"></span></div>
+      <ol data-field="code"></ol>
+      <p class="narration" data-field="narration"></p>
+    </div>
+    <dl class="stats">
+      <div class="stat"><dt>Índices</dt><dd data-field="indices"></dd></div>
+      <div class="stat"><dt>Soma atual</dt><dd data-field="soma"></dd></div>
+      <div class="stat best" data-field="best-card"><dt>Melhor soma</dt><dd data-field="best"></dd></div>
+      <div class="stat"><dt>Passos</dt><dd data-field="passos"></dd></div>
+      <div class="stat"><dt>Subvetores / S(n)</dt><dd data-field="subvetores"></dd><div class="meter"><i data-field="subvetores-meter"></i></div></div>
+      <div class="stat"><dt data-field="somas-label"></dt><dd data-field="somas"></dd><div class="meter"><i data-field="somas-meter"></i></div></div>
+    </dl>
+  </section>
+</template>
+
+<script>
+const SEMENTE_PADRAO = 20261020;
+
+const REFERENCIA = [
+  { n: 50, soma: 329, inicio: 15, fim: 46, cubica: 22100, quadratica: 1275, tempoCubica: 0.008121, tempoQuadratica: 0.000752 },
+  { n: 100, soma: 485, inicio: 15, fim: 96, cubica: 171700, quadratica: 5050, tempoCubica: 0.058024, tempoQuadratica: 0.003064 },
+  { n: 300, soma: 1448, inicio: 192, fim: 281, cubica: 4545100, quadratica: 45150, tempoCubica: 1.5297, tempoQuadratica: 0.0284 },
+  { n: 500, soma: 2929, inicio: 192, fim: 490, cubica: 20958500, quadratica: 125250, tempoCubica: 6.7536, tempoQuadratica: 0.0706 }
+];
+
+const CONJUNTOS = {
+  classico: { nome: "Exemplo clássico", fixo: [-2, 1, -3, 4, -1, 2, 1, -5, 4], esperado: { soma: 6, inicio: 3, fim: 6 } },
+  negativos: { nome: "Todos negativos", fixo: [-8, -3, -6, -2, -5, -4], esperado: { soma: -2, inicio: 3, fim: 3 } },
+  positivos: { nome: "Todos positivos", fixo: [1, 2, 3, 4], esperado: { soma: 10, inicio: 0, fim: 3 } },
+  zeros: { nome: "Vetor de zeros", fixo: [0, 0, 0], esperado: { soma: 0, inicio: 0, fim: 0 } },
+  unitario: { nome: "Um elemento", fixo: [-7], esperado: { soma: -7, inicio: 0, fim: 0 } },
+  empate: { nome: "Empate", fixo: [2, -2, 2], esperado: { soma: 2, inicio: 0, fim: 0 } },
+  misto: { nome: "Valores mistos", fixo: [-1, 3, -2, 5, -9, 4], esperado: { soma: 6, inicio: 1, fim: 3 } },
+  longo: { nome: "Soma acima de INT_MAX", fixo: [1000000000, 1000000000, 1000000000], esperado: { soma: 3000000000, inicio: 0, fim: 2 } },
+  aleatorio12: { nome: "Aleatório", tamanho: 12 },
+  aleatorio25: { nome: "Aleatório", tamanho: 25 },
+  exp50: { nome: "Experimento", tamanho: 50 },
+  exp100: { nome: "Experimento", tamanho: 100 },
+  exp300: { nome: "Experimento", tamanho: 300 },
+  exp500: { nome: "Experimento", tamanho: 500 }
+};
+
+const CENAS = [
+  {
+    titulo: "O problema",
+    texto: "Encontrar o intervalo contíguo, não vazio, com a maior soma. No exemplo clássico a resposta é [4, −1, 2, 1] = 6, nos índices [3, 6].",
+    entrada: "classico", modo: "ambos", velocidade: 14, visao: "simulacao"
+  },
+  {
+    titulo: "Abordagem 1: três laços",
+    texto: "Para cada intervalo [i, j], o laço k soma tudo de novo a partir de i. Trabalho repetido: Θ(n³).",
+    entrada: "classico", modo: "cubica", velocidade: 18, visao: "simulacao"
+  },
+  {
+    titulo: "Abordagem 2: dois laços",
+    texto: "Ao avançar j, basta somar vetor[j] ao que já foi calculado. O terceiro laço desaparece: Θ(n²).",
+    entrada: "classico", modo: "quadratica", velocidade: 18, visao: "simulacao"
+  },
+  {
+    titulo: "Lado a lado",
+    texto: "As duas recebem o mesmo número de passos por segundo. Avaliam os mesmos intervalos, mas a quadrática termina muito antes.",
+    entrada: "aleatorio12", modo: "ambos", velocidade: 30, visao: "simulacao"
+  },
+  {
+    titulo: "Casos de teste",
+    texto: "Com todos os valores negativos, a resposta é o maior elemento. Por isso a melhor soma começa em INT64_MIN e o vetor vazio não é aceito.",
+    entrada: "negativos", modo: "ambos", velocidade: 22, visao: "simulacao"
+  },
+  {
+    titulo: "Escala do experimento",
+    texto: "Com n = 500 a cúbica faz 20.958.500 somas e a quadrática 125.250. A razão (n + 2)/3 chega a 167,33.",
+    entrada: "exp500", modo: "ambos", velocidade: 100, visao: "simulacao"
+  },
+  {
+    titulo: "Resultados",
+    texto: "As contagens observadas coincidem com T₃(n) e T₂(n), e as duas versões encontram o mesmo intervalo.",
+    entrada: "exp500", modo: "ambos", velocidade: 100, visao: "analise", manterEstado: true
+  }
+];
+
+const Teoria = {
+  subvetores: (n) => (n * (n + 1)) / 2,
+  somasCubicas: (n) => (n * (n + 1) * (n + 2)) / 6,
+  somasQuadraticas: (n) => (n * (n + 1)) / 2,
+  razao: (n) => (n + 2) / 3
+};
+
+const Formato = (() => {
+  const inteiro = new Intl.NumberFormat("pt-BR");
+  const decimal = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const tempo = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  const sinal = (valor) => (valor < 0 ? `−${inteiro.format(-valor)}` : inteiro.format(valor));
+  return {
+    inteiro: (valor) => inteiro.format(valor),
+    decimal: (valor) => decimal.format(valor),
+    tempo: (valor) => tempo.format(valor),
+    sinal,
+    termo: (valor) => (valor < 0 ? `(${sinal(valor)})` : sinal(valor)),
+    intervalo: (inicio, fim) => `[${inicio}, ${fim}]`
+  };
+})();
+
+const Aleatorio = {
+  criarXorshift32(semente) {
+    let estado = semente >>> 0;
+    return () => {
+      let x = estado;
+      x ^= x << 13;
+      x >>>= 0;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      x >>>= 0;
+      estado = x;
+      return x;
+    };
+  },
+  gerarVetor(tamanho, semente) {
+    const proximo = Aleatorio.criarXorshift32(semente);
+    return Array.from({ length: tamanho }, () => (proximo() % 201) - 100);
+  }
+};
+
+const Entradas = {
+  montar(chave, semente) {
+    const conjunto = CONJUNTOS[chave];
+    if (conjunto.fixo) {
+      return { chave, nome: conjunto.nome, vetor: [...conjunto.fixo], esperado: conjunto.esperado, aleatorio: false };
+    }
+    const vetor = Aleatorio.gerarVetor(conjunto.tamanho, semente);
+    return { chave, nome: conjunto.nome, vetor, esperado: Entradas.esperadoDaReferencia(vetor.length, semente), aleatorio: true };
+  },
+  esperadoDaReferencia(n, semente) {
+    if (semente !== SEMENTE_PADRAO) return null;
+    const linha = REFERENCIA.find((item) => item.n === n);
+    return linha ? { soma: linha.soma, inicio: linha.inicio, fim: linha.fim } : null;
+  }
+};
+
+function criarEstado() {
+  return {
+    linha: null,
+    i: null,
+    j: null,
+    k: null,
+    soma: null,
+    iteracoes: 0,
+    subvetores: 0,
+    somas: 0,
+    passos: 0,
+    melhor: { soma: null, inicio: null, fim: null },
+    melhorAtualizado: false,
+    novosMaximos: 0,
+    celulasPendentes: []
+  };
+}
+
+function registrarMelhor(estado, soma, inicio, fim) {
+  estado.celulasPendentes.push(inicio, fim, soma);
+  if (estado.melhor.soma === null || soma > estado.melhor.soma) {
+    estado.melhor = { soma, inicio, fim };
+    estado.melhorAtualizado = true;
+    estado.novosMaximos += 1;
+  }
+}
+
+function descreverRegistro(estado) {
+  const { soma, i, j, melhor } = estado;
+  if (estado.melhorAtualizado) return `registrar_melhor: ${Formato.sinal(soma)} é a nova melhor soma, intervalo ${Formato.intervalo(i, j)}.`;
+  return `registrar_melhor: ${Formato.sinal(soma)} não supera ${Formato.sinal(melhor.soma)}. O melhor continua ${Formato.intervalo(melhor.inicio, melhor.fim)}.`;
+}
+
+function descreverFim(estado) {
+  const { melhor } = estado;
+  return `return true: soma máxima ${Formato.sinal(melhor.soma)} no intervalo ${Formato.intervalo(melhor.inicio, melhor.fim)}.`;
+}
+
+const DESCRICOES_COMUNS = {
+  1: (estado, vetor) => `entrada_valida: vetor não nulo e n = ${vetor.length} > 0.`,
+  4: () => "iniciar_resultado: melhor soma começa em INT64_MIN e os contadores em zero.",
+  6: (estado, vetor) => estado.i < vetor.length
+    ? `Laço externo: i = ${estado.i} < ${vetor.length}. Novo índice de início.`
+    : `i = ${vetor.length}: a condição i < n é falsa e o laço externo termina.`,
+  7: (estado) => `iteracoes_externas = ${Formato.inteiro(estado.iteracoes)}.`
+};
+
+const ALGORITMOS = {
+  cubica: {
+    titulo: "Força bruta cúbica",
+    rotulo: "três laços",
+    classe: "Θ(n³)",
+    rotuloSomas: "Somas / T₃(n)",
+    totalSomas: Teoria.somasCubicas,
+    codigo: [
+      "bool soma_maxima_cubica(const int *vetor, size_t n, Resultado *saida) {",
+      "    if (!entrada_valida(vetor, n, saida)) {",
+      "        return false;",
+      "    }",
+      "    iniciar_resultado(saida);",
+      "",
+      "    for (size_t i = 0; i < n; ++i) {",
+      "        ++saida->iteracoes_externas;",
+      "        for (size_t j = i; j < n; ++j) {",
+      "            ++saida->subvetores_avaliados;",
+      "            int64_t soma = 0;",
+      "            for (size_t k = i; k <= j; ++k) {",
+      "                soma += vetor[k];",
+      "                ++saida->somas;",
+      "            }",
+      "            registrar_melhor(saida, soma, i, j);",
+      "        }",
+      "    }",
+      "    return true;",
+      "}"
+    ],
+    *executar(vetor, estado) {
+      const n = vetor.length;
+      yield 1;
+      yield 4;
+      for (estado.i = 0; ; estado.i += 1) {
+        yield 6;
+        if (estado.i >= n) break;
+        estado.iteracoes += 1;
+        yield 7;
+        for (estado.j = estado.i; ; estado.j += 1) {
+          yield 8;
+          if (estado.j >= n) break;
+          estado.subvetores += 1;
+          yield 9;
+          estado.soma = 0;
+          yield 10;
+          for (estado.k = estado.i; ; estado.k += 1) {
+            yield 11;
+            if (estado.k > estado.j) break;
+            estado.soma += vetor[estado.k];
+            yield 12;
+            estado.somas += 1;
+            yield 13;
+          }
+          registrarMelhor(estado, estado.soma, estado.i, estado.j);
+          yield 15;
+        }
+      }
+      yield 18;
+    },
+    descricoes: {
+      ...DESCRICOES_COMUNS,
+      8: (estado, vetor) => estado.j < vetor.length
+        ? `Laço do fim: j = ${estado.j}. Próximo intervalo: ${Formato.intervalo(estado.i, estado.j)}.`
+        : `j = ${vetor.length}: acabaram os intervalos que começam em i = ${estado.i}.`,
+      9: (estado) => `subvetores_avaliados = ${Formato.inteiro(estado.subvetores)}.`,
+      10: (estado) => estado.j === estado.i
+        ? `soma = 0: começa a somar ${Formato.intervalo(estado.i, estado.j)}.`
+        : `soma = 0: recomeça do zero, mesmo já tendo somado ${Formato.intervalo(estado.i, estado.j - 1)} antes.`,
+      11: (estado) => estado.k <= estado.j
+        ? `Terceiro laço: k = ${estado.k} ≤ ${estado.j}.`
+        : `k = ${estado.k} > ${estado.j}: soma de ${Formato.intervalo(estado.i, estado.j)} pronta após ${estado.j - estado.i + 1} adições.`,
+      12: (estado, vetor) => `soma += vetor[${estado.k}] → ${Formato.sinal(estado.soma - vetor[estado.k])} + ${Formato.termo(vetor[estado.k])} = ${Formato.sinal(estado.soma)}.`,
+      13: (estado) => `somas = ${Formato.inteiro(estado.somas)}.`,
+      15: descreverRegistro,
+      18: descreverFim
+    },
+    janela(estado, n) {
+      if (estado.i === null || estado.j === null || estado.i >= n || estado.j >= n) return null;
+      const linha = estado.linha;
+      const somandoK = linha === 12 || linha === 13;
+      const conferindoK = linha === 11;
+      let somadoAte = estado.i - 1;
+      if (somandoK) somadoAte = estado.k;
+      if (conferindoK) somadoAte = Math.min(estado.k - 1, estado.j);
+      if (linha === 15) somadoAte = estado.j;
+      const cursorAtivo = (somandoK || conferindoK) && estado.k <= estado.j;
+      return { inicio: estado.i, fim: estado.j, somadoAte, cursor: cursorAtivo ? estado.k : null };
+    },
+    ponteiros(estado, n) {
+      const lista = [];
+      if (estado.i !== null && estado.i < n) lista.push(["i", estado.i]);
+      if (estado.j !== null && estado.j < n && estado.i < n) lista.push(["j", estado.j]);
+      const linhaDoK = estado.linha >= 11 && estado.linha <= 13;
+      if (linhaDoK && estado.k !== null && estado.k <= estado.j) lista.push(["k", estado.k]);
+      return lista;
+    },
+    indices(estado) {
+      return [`i=${estado.i ?? "–"}`, `j=${estado.j ?? "–"}`, `k=${estado.k ?? "–"}`].join(" ");
+    }
+  },
+  quadratica: {
+    titulo: "Soma acumulada quadrática",
+    rotulo: "dois laços",
+    classe: "Θ(n²)",
+    rotuloSomas: "Somas / T₂(n)",
+    totalSomas: Teoria.somasQuadraticas,
+    codigo: [
+      "bool soma_maxima_quadratica(const int *vetor, size_t n, Resultado *saida) {",
+      "    if (!entrada_valida(vetor, n, saida)) {",
+      "        return false;",
+      "    }",
+      "    iniciar_resultado(saida);",
+      "",
+      "    for (size_t i = 0; i < n; ++i) {",
+      "        ++saida->iteracoes_externas;",
+      "        int64_t soma = 0;",
+      "        for (size_t j = i; j < n; ++j) {",
+      "            ++saida->subvetores_avaliados;",
+      "            soma += vetor[j];",
+      "            ++saida->somas;",
+      "            registrar_melhor(saida, soma, i, j);",
+      "        }",
+      "    }",
+      "    return true;",
+      "}"
+    ],
+    *executar(vetor, estado) {
+      const n = vetor.length;
+      yield 1;
+      yield 4;
+      for (estado.i = 0; ; estado.i += 1) {
+        yield 6;
+        if (estado.i >= n) break;
+        estado.iteracoes += 1;
+        yield 7;
+        estado.soma = 0;
+        yield 8;
+        for (estado.j = estado.i; ; estado.j += 1) {
+          yield 9;
+          if (estado.j >= n) break;
+          estado.subvetores += 1;
+          yield 10;
+          estado.soma += vetor[estado.j];
+          yield 11;
+          estado.somas += 1;
+          yield 12;
+          registrarMelhor(estado, estado.soma, estado.i, estado.j);
+          yield 13;
+        }
+      }
+      yield 16;
+    },
+    descricoes: {
+      ...DESCRICOES_COMUNS,
+      8: (estado) => `soma = 0 uma única vez para o início i = ${estado.i}.`,
+      9: (estado, vetor) => estado.j < vetor.length
+        ? `Laço do fim: j = ${estado.j}. O intervalo cresce para ${Formato.intervalo(estado.i, estado.j)}.`
+        : `j = ${vetor.length}: acabaram os intervalos que começam em i = ${estado.i}.`,
+      10: (estado) => `subvetores_avaliados = ${Formato.inteiro(estado.subvetores)}.`,
+      11: (estado, vetor) => {
+        const anterior = estado.soma - vetor[estado.j];
+        const conta = `${Formato.sinal(anterior)} + ${Formato.termo(vetor[estado.j])} = ${Formato.sinal(estado.soma)}`;
+        if (estado.j === estado.i) return `soma += vetor[${estado.j}] → ${conta}.`;
+        return `soma += vetor[${estado.j}] → ${conta}. Reaproveita a soma de ${Formato.intervalo(estado.i, estado.j - 1)}.`;
+      },
+      12: (estado) => `somas = ${Formato.inteiro(estado.somas)}.`,
+      13: descreverRegistro,
+      16: descreverFim
+    },
+    janela(estado, n) {
+      if (estado.i === null || estado.j === null || estado.i >= n || estado.j >= n) return null;
+      const linha = estado.linha;
+      if (linha < 9) return null;
+      const somado = linha >= 11;
+      return { inicio: estado.i, fim: estado.j, somadoAte: somado ? estado.j : estado.j - 1, cursor: estado.j };
+    },
+    ponteiros(estado, n) {
+      const lista = [];
+      if (estado.i !== null && estado.i < n) lista.push(["i", estado.i]);
+      if (estado.linha >= 9 && estado.j !== null && estado.j < n && estado.i < n) lista.push(["j", estado.j]);
+      return lista;
+    },
+    indices(estado) {
+      return [`i=${estado.i ?? "–"}`, `j=${estado.j ?? "–"}`].join(" ");
+    }
+  }
+};
+
+const Tema = (() => {
+  const nomes = ["panel", "surface", "line", "fg", "muted", "cubic", "cubic-soft", "quad", "quad-soft", "best", "heat-pos", "heat-neg", "bar", "bar-neg", "code-bg"];
+  let cores = {};
+  const ouvintes = [];
+  const converter = (hex) => {
+    const valor = hex.trim().replace("#", "");
+    return [0, 2, 4].map((posicao) => parseInt(valor.slice(posicao, posicao + 2), 16));
+  };
+  const ler = () => {
+    const estilo = getComputedStyle(document.documentElement);
+    cores = Object.fromEntries(nomes.map((nome) => [nome, estilo.getPropertyValue(`--${nome}`).trim()]));
+    ouvintes.forEach((ouvinte) => ouvinte());
+  };
+  return {
+    iniciar() {
+      ler();
+      matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ler);
+      new MutationObserver(ler).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    },
+    cor: (nome) => cores[nome],
+    rgb: (nome) => converter(cores[nome]),
+    aoMudar: (ouvinte) => ouvintes.push(ouvinte)
+  };
+})();
+
+class VisaoVetor {
+  constructor(canvas, corDaFaixa, corSuave) {
+    this.canvas = canvas;
+    this.contexto = canvas.getContext("2d");
+    this.corDaFaixa = corDaFaixa;
+    this.corSuave = corSuave;
+    this.largura = 0;
+    this.altura = 0;
+    new ResizeObserver(() => this.ajustarTamanho()).observe(canvas);
+  }
+
+  ajustarTamanho() {
+    const escala = window.devicePixelRatio || 1;
+    this.largura = this.canvas.clientWidth;
+    this.altura = this.canvas.clientHeight;
+    this.canvas.width = Math.round(this.largura * escala);
+    this.canvas.height = Math.round(this.altura * escala);
+    this.contexto.setTransform(escala, 0, 0, escala, 0, 0);
+  }
+
+  desenhar(vetor, estado, algoritmo) {
+    if (!this.largura || !this.altura) return;
+    const ctx = this.contexto;
+    const n = vetor.length;
+    const detalhado = n <= 30;
+    const topo = detalhado ? 20 : 8;
+    const base = this.altura - (detalhado ? 56 : 34);
+    const zero = (topo + base) / 2;
+    const meiaAltura = (base - topo) / 2;
+    const maximo = Math.max(1, ...vetor.map((valor) => Math.abs(valor)));
+    const passo = this.largura / n;
+    const larguraBarra = Math.max(passo * (detalhado ? 0.72 : 0.86), 0.6);
+    const janela = algoritmo.janela(estado, n);
+
+    ctx.clearRect(0, 0, this.largura, this.altura);
+    ctx.fillStyle = Tema.cor("line");
+    ctx.fillRect(0, zero, this.largura, 1);
+
+    vetor.forEach((valor, indice) => {
+      const x = indice * passo + (passo - larguraBarra) / 2;
+      const altura = Math.max((Math.abs(valor) / maximo) * meiaAltura, valor === 0 ? 1 : 1.5);
+      ctx.fillStyle = this.corDaBarra(valor, indice, janela);
+      ctx.fillRect(x, valor >= 0 ? zero - altura : zero + 1, larguraBarra, altura);
+      if (detalhado) this.rotularValor(valor, x + larguraBarra / 2, valor >= 0 ? zero - altura - 5 : zero + altura + 15);
+    });
+
+    this.desenharMelhor(estado, passo, base + 8);
+    if (detalhado) this.rotularIndices(n, passo, base + 27);
+    this.desenharPonteiros(algoritmo.ponteiros(estado, n), passo, this.altura - 4);
+  }
+
+  corDaBarra(valor, indice, janela) {
+    if (janela && indice === janela.cursor) return Tema.cor("fg");
+    if (janela && indice >= janela.inicio && indice <= janela.somadoAte) return Tema.cor(this.corDaFaixa);
+    if (janela && indice >= janela.inicio && indice <= janela.fim) return Tema.cor(this.corSuave);
+    return Tema.cor(valor < 0 ? "bar-neg" : "bar");
+  }
+
+  rotularValor(valor, x, y) {
+    const ctx = this.contexto;
+    ctx.font = "600 13px 'Space Grotesk', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = Tema.cor("fg");
+    const texto = Math.abs(valor) >= 1e6 ? `${valor / 1e9}e9` : String(valor);
+    ctx.fillText(texto, x, y);
+  }
+
+  rotularIndices(n, passo, y) {
+    const ctx = this.contexto;
+    ctx.font = "11px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = Tema.cor("muted");
+    for (let indice = 0; indice < n; indice += 1) ctx.fillText(String(indice), indice * passo + passo / 2, y);
+  }
+
+  desenharMelhor(estado, passo, y) {
+    const { inicio, fim } = estado.melhor;
+    if (inicio === null) return;
+    const ctx = this.contexto;
+    const x1 = inicio * passo + 1;
+    const x2 = (fim + 1) * passo - 1;
+    ctx.strokeStyle = Tema.cor("best");
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y - 6);
+    ctx.lineTo(x1, y);
+    ctx.lineTo(x2, y);
+    ctx.lineTo(x2, y - 6);
+    ctx.stroke();
+  }
+
+  desenharPonteiros(ponteiros, passo, y) {
+    const ctx = this.contexto;
+    const agrupados = new Map();
+    ponteiros.forEach(([nome, indice]) => agrupados.set(indice, [...(agrupados.get(indice) || []), nome]));
+    ctx.font = "700 14px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    agrupados.forEach((nomes, indice) => {
+      const x = indice * passo + passo / 2;
+      ctx.fillStyle = Tema.cor(this.corDaFaixa);
+      ctx.beginPath();
+      ctx.moveTo(x, y - 20);
+      ctx.lineTo(x - 5, y - 13);
+      ctx.lineTo(x + 5, y - 13);
+      ctx.fill();
+      ctx.fillText(nomes.join(","), x, y);
+    });
+  }
+}
+
+class VisaoMapa {
+  constructor(canvas, marcadorAtual, marcadorMelhor) {
+    this.canvas = canvas;
+    this.contexto = canvas.getContext("2d");
+    this.marcadorAtual = marcadorAtual;
+    this.marcadorMelhor = marcadorMelhor;
+    this.imagem = null;
+  }
+
+  reiniciar(vetor) {
+    const n = vetor.length;
+    this.n = n;
+    this.canvas.width = n;
+    this.canvas.height = n;
+    this.somas = new Float64Array(n * n).fill(NaN);
+    this.imagem = this.contexto.createImageData(n, n);
+    this.escala = Math.max(1, vetor.reduce((total, valor) => total + Math.abs(valor), 0) / 2);
+    this.repintar();
+  }
+
+  repintar() {
+    if (!this.imagem) return;
+    for (let linha = 0; linha < this.n; linha += 1) {
+      for (let coluna = 0; coluna < this.n; coluna += 1) this.pintarCelula(linha, coluna);
+    }
+    this.contexto.putImageData(this.imagem, 0, 0);
+  }
+
+  pintarCelula(linha, coluna) {
+    const indice = linha * this.n + coluna;
+    const cor = this.corDaCelula(linha, coluna, this.somas[indice]);
+    const deslocamento = indice * 4;
+    this.imagem.data[deslocamento] = cor[0];
+    this.imagem.data[deslocamento + 1] = cor[1];
+    this.imagem.data[deslocamento + 2] = cor[2];
+    this.imagem.data[deslocamento + 3] = 255;
+  }
+
+  corDaCelula(linha, coluna, soma) {
+    if (coluna < linha) return Tema.rgb("panel");
+    if (Number.isNaN(soma)) return Tema.rgb("code-bg");
+    const intensidade = Math.min(1, Math.sqrt(Math.abs(soma) / this.escala));
+    const fundo = Tema.rgb("line");
+    const alvo = Tema.rgb(soma >= 0 ? "heat-pos" : "heat-neg");
+    const mistura = 0.25 + 0.75 * intensidade;
+    return fundo.map((canal, posicao) => Math.round(canal + (alvo[posicao] - canal) * mistura));
+  }
+
+  atualizar(estado) {
+    const pendentes = estado.celulasPendentes;
+    if (pendentes.length) {
+      for (let posicao = 0; posicao < pendentes.length; posicao += 3) {
+        const linha = pendentes[posicao];
+        const coluna = pendentes[posicao + 1];
+        this.somas[linha * this.n + coluna] = pendentes[posicao + 2];
+        this.pintarCelula(linha, coluna);
+      }
+      pendentes.length = 0;
+      this.contexto.putImageData(this.imagem, 0, 0);
+    }
+    this.posicionar(this.marcadorMelhor, estado.melhor.inicio, estado.melhor.fim);
+    const avaliando = estado.i !== null && estado.j !== null && estado.i < this.n && estado.j < this.n && estado.j >= estado.i;
+    this.posicionar(this.marcadorAtual, avaliando ? estado.i : null, avaliando ? estado.j : null);
+  }
+
+  posicionar(marcador, linha, coluna) {
+    marcador.hidden = linha === null;
+    if (linha === null) return;
+    const tamanho = 100 / this.n;
+    marcador.style.left = `${(coluna + 0.5) * tamanho}%`;
+    marcador.style.top = `${(linha + 0.5) * tamanho}%`;
+    marcador.style.width = `${tamanho}%`;
+    marcador.style.height = `${tamanho}%`;
+  }
+}
+
+class Faixa {
+  constructor(chave, recipiente) {
+    this.chave = chave;
+    this.algoritmo = ALGORITMOS[chave];
+    this.elemento = document.getElementById("lane-template").content.firstElementChild.cloneNode(true);
+    this.elemento.dataset.lane = chave;
+    recipiente.append(this.elemento);
+    this.campos = Object.fromEntries([...this.elemento.querySelectorAll("[data-field]")].map((campo) => [campo.dataset.field, campo]));
+    this.preencherCabecalho();
+    this.linhasDeCodigo = this.montarCodigo();
+    const corDaFaixa = chave === "cubica" ? "cubic" : "quad";
+    this.visaoVetor = new VisaoVetor(this.campos.array, corDaFaixa, `${corDaFaixa}-soft`);
+    this.visaoMapa = new VisaoMapa(this.campos.heat, this.campos["heat-current"], this.campos["heat-best"]);
+    this.maximosExibidos = 0;
+    this.linhaAtiva = null;
+    Tema.aoMudar(() => this.visaoMapa.repintar());
+  }
+
+  preencherCabecalho() {
+    this.campos.tag.textContent = this.algoritmo.rotulo;
+    this.campos.title.textContent = this.algoritmo.titulo;
+    this.campos.badge.textContent = this.algoritmo.classe;
+    this.campos["somas-label"].textContent = this.algoritmo.rotuloSomas;
+  }
+
+  montarCodigo() {
+    const palavras = /\b(for|if|return|bool|size_t|int64_t|const|int)\b/g;
+    return this.algoritmo.codigo.map((texto) => {
+      const item = document.createElement("li");
+      const seguro = texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      item.innerHTML = seguro.replace(palavras, '<span class="tok-kw">$1</span>') || " ";
+      this.campos.code.append(item);
+      return item;
+    });
+  }
+
+  reiniciar(vetor) {
+    this.vetor = vetor;
+    this.estado = criarEstado();
+    this.execucao = this.algoritmo.executar(vetor, this.estado);
+    this.concluida = false;
+    this.maximosExibidos = 0;
+    this.visaoMapa.reiniciar(vetor);
+  }
+
+  avancar() {
+    if (this.concluida) return;
+    this.estado.melhorAtualizado = false;
+    const resultado = this.execucao.next();
+    if (resultado.done) {
+      this.concluida = true;
+      return;
+    }
+    this.estado.linha = resultado.value;
+    this.estado.passos += 1;
+  }
+
+  renderizar(executando) {
+    const { estado, vetor, algoritmo, campos } = this;
+    const n = vetor.length;
+    this.visaoVetor.desenhar(vetor, estado, algoritmo);
+    this.visaoMapa.atualizar(estado);
+    this.destacarLinha(estado.linha);
+    campos.line.textContent = estado.linha === null ? "aguardando" : `linha ${estado.linha + 1}`;
+    campos.narration.textContent = this.narrar();
+    campos.status.textContent = this.rotuloDeStatus(executando);
+    campos.status.dataset.state = this.concluida ? "done" : executando && estado.passos > 0 ? "running" : "idle";
+    campos.indices.textContent = algoritmo.indices(estado);
+    campos.soma.textContent = estado.soma === null ? "–" : Formato.sinal(estado.soma);
+    campos.best.textContent = estado.melhor.soma === null ? "INT64_MIN" : `${Formato.sinal(estado.melhor.soma)} ${Formato.intervalo(estado.melhor.inicio, estado.melhor.fim)}`;
+    campos.passos.textContent = Formato.inteiro(estado.passos);
+    this.preencherMedidor("subvetores", estado.subvetores, Teoria.subvetores(n));
+    this.preencherMedidor("somas", estado.somas, algoritmo.totalSomas(n));
+    this.sinalizarNovoMaximo();
+  }
+
+  preencherMedidor(campo, atual, total) {
+    this.campos[campo].innerHTML = `${Formato.inteiro(atual)} <small>/ ${Formato.inteiro(total)}</small>`;
+    this.campos[`${campo}-meter`].style.width = `${(atual / total) * 100}%`;
+  }
+
+  sinalizarNovoMaximo() {
+    if (this.estado.novosMaximos === this.maximosExibidos) return;
+    this.maximosExibidos = this.estado.novosMaximos;
+    const cartao = this.campos["best-card"];
+    cartao.classList.remove("flash");
+    void cartao.offsetWidth;
+    cartao.classList.add("flash");
+  }
+
+  destacarLinha(linha) {
+    if (this.linhaAtiva === linha) return;
+    this.linhasDeCodigo[this.linhaAtiva]?.classList.remove("active");
+    const ativa = this.linhasDeCodigo[linha];
+    ativa?.classList.add("active");
+    if (ativa) this.centralizarLinha(ativa);
+    this.linhaAtiva = linha;
+  }
+
+  centralizarLinha(item) {
+    const lista = this.campos.code;
+    if (lista.scrollHeight <= lista.clientHeight) return;
+    lista.scrollTop = item.offsetTop - (lista.clientHeight - item.offsetHeight) / 2;
+  }
+
+  narrar() {
+    const { estado, vetor } = this;
+    if (estado.linha === null) return "Pressione Espaço para executar ou → para avançar uma linha.";
+    const descrever = this.algoritmo.descricoes[estado.linha];
+    return descrever ? descrever(estado, vetor) : "";
+  }
+
+  rotuloDeStatus(executando) {
+    if (this.concluida) return "Concluído";
+    if (this.estado.passos === 0) return "Pronto";
+    return executando ? "Executando" : "Pausado";
+  }
+
+  definirVisivel(visivel) {
+    this.elemento.hidden = !visivel;
+  }
+}
+
+class Simulador {
+  constructor(faixas, aoRenderizar) {
+    this.faixas = faixas;
+    this.aoRenderizar = aoRenderizar;
+    this.executando = false;
+    this.acelerado = false;
+    this.passosPorSegundo = 1;
+    this.saldo = 0;
+    this.ultimoQuadro = null;
+    this.limiteDeTempoMs = { normal: 14, acelerado: 32 };
+    requestAnimationFrame((tempo) => this.quadro(tempo));
+  }
+
+  pendentes() {
+    return this.faixas.filter((faixa) => !faixa.elemento.hidden && !faixa.concluida);
+  }
+
+  avancarUmPasso() {
+    this.pendentes().forEach((faixa) => faixa.avancar());
+  }
+
+  alternar() {
+    if (!this.pendentes().length) return;
+    this.executando = !this.executando;
+    this.acelerado = false;
+    this.saldo = 0;
+  }
+
+  concluir() {
+    if (!this.pendentes().length) return;
+    this.executando = true;
+    this.acelerado = true;
+  }
+
+  pausar() {
+    this.executando = false;
+    this.acelerado = false;
+  }
+
+  passo() {
+    this.pausar();
+    this.avancarUmPasso();
+  }
+
+  quadro(tempo) {
+    const intervalo = this.ultimoQuadro === null ? 0 : Math.min((tempo - this.ultimoQuadro) / 1000, 0.25);
+    this.ultimoQuadro = tempo;
+    if (this.executando) this.processar(intervalo);
+    this.aoRenderizar();
+    requestAnimationFrame((proximo) => this.quadro(proximo));
+  }
+
+  processar(intervalo) {
+    this.saldo += this.passosPorSegundo * intervalo;
+    let restantes = this.acelerado ? Infinity : Math.floor(this.saldo);
+    if (Number.isFinite(restantes)) this.saldo -= restantes;
+    const limite = performance.now() + this.limiteDeTempoMs[this.acelerado ? "acelerado" : "normal"];
+    let ativas = this.pendentes();
+    while (restantes > 0 && ativas.length) {
+      const lote = Math.min(restantes, 5000);
+      for (let contador = 0; contador < lote; contador += 1) {
+        for (const faixa of ativas) faixa.avancar();
+      }
+      restantes -= lote;
+      ativas = this.pendentes();
+      if (performance.now() > limite) {
+        this.saldo = 0;
+        break;
+      }
+    }
+    if (!this.pendentes().length) this.pausar();
+  }
+}
+
+const Interface = (() => {
+  const elementos = {
+    dataset: document.getElementById("dataset"),
+    seed: document.getElementById("seed"),
+    seedField: document.getElementById("seed-field"),
+    settings: document.getElementById("settings"),
+    speed: document.getElementById("speed"),
+    speedLabel: document.getElementById("speed-label"),
+    play: document.getElementById("play"),
+    step: document.getElementById("step"),
+    finish: document.getElementById("finish"),
+    reset: document.getElementById("reset"),
+    prev: document.getElementById("prev"),
+    next: document.getElementById("next"),
+    sceneList: document.getElementById("scene-list"),
+    sceneNumber: document.getElementById("scene-number"),
+    sceneTotal: document.getElementById("scene-total"),
+    sceneTitle: document.getElementById("scene-title"),
+    sceneText: document.getElementById("scene-text"),
+    datasetInfo: document.getElementById("dataset-info"),
+    lanes: document.getElementById("lanes"),
+    analysis: document.getElementById("analysis"),
+    analysisTitle: document.getElementById("analysis-title"),
+    ratioValue: document.getElementById("ratio-value"),
+    ratioCaption: document.getElementById("ratio-caption"),
+    race: document.getElementById("race"),
+    theory: document.getElementById("theory"),
+    checks: document.getElementById("checks"),
+    reference: document.getElementById("reference"),
+    toolbar: document.getElementById("toolbar"),
+    fullscreen: document.getElementById("fullscreen"),
+    theme: document.getElementById("theme"),
+    help: document.getElementById("help"),
+    helpOpen: document.getElementById("help-open"),
+    helpClose: document.getElementById("help-close")
+  };
+
+  let faixas = [];
+  let faixaCubica = null;
+  let faixaQuadratica = null;
+  let entrada = null;
+  let simulador = null;
+  let cenaAtual = 0;
+
+  const velocidade = (posicao) => Math.round(10 ** ((posicao / 100) * 7.5));
+  const marcar = (nome, valor) => {
+    document.querySelector(`input[name="${nome}"][value="${valor}"]`).checked = true;
+  };
+  const selecionado = (nome) => document.querySelector(`input[name="${nome}"]:checked`).value;
+
+  function descreverVelocidade() {
+    const valor = velocidade(Number(elementos.speed.value));
+    elementos.speedLabel.textContent = valor >= 3e7 ? "máxima" : `${Formato.inteiro(valor)} passos/s`;
+    simulador.passosPorSegundo = valor;
+  }
+
+  function ajustarVelocidade(delta) {
+    elementos.speed.value = Math.min(100, Math.max(0, Number(elementos.speed.value) + delta));
+    descreverVelocidade();
+  }
+
+  function lerSemente() {
+    const valor = Math.trunc(Number(elementos.seed.value));
+    if (!Number.isFinite(valor) || valor < 1 || valor > 4294967295) {
+      elementos.seed.value = SEMENTE_PADRAO;
+      return SEMENTE_PADRAO;
+    }
+    return valor;
+  }
+
+  function carregarEntrada() {
+    entrada = Entradas.montar(elementos.dataset.value, lerSemente());
+    elementos.seedField.hidden = !entrada.aleatorio;
+    faixas.forEach((faixa) => faixa.reiniciar(entrada.vetor));
+    simulador.pausar();
+    descreverEntrada();
+    renderizarReferencia();
+  }
+
+  function descreverEntrada() {
+    const { vetor, nome, aleatorio } = entrada;
+    const origem = aleatorio ? `${nome} · xorshift32, semente ${lerSemente()}` : `${nome} · tests/test_max_subarray.c`;
+    const conteudo = vetor.length <= 30 ? ` · <code>[${vetor.join(", ")}]</code>` : " · valores em [−100, 100]";
+    elementos.datasetInfo.innerHTML = `${origem} · n = ${Formato.inteiro(vetor.length)}${conteudo}`;
+  }
+
+  function renderizarReferencia() {
+    const n = entrada.vetor.length;
+    elementos.reference.innerHTML = REFERENCIA.map((linha) => `
+      <tr class="${linha.n === n && entrada.aleatorio ? "current" : ""}">
+        <td>${linha.n}</td>
+        <td>${Formato.inteiro(linha.soma)}</td>
+        <td class="mono">${Formato.intervalo(linha.inicio, linha.fim)}</td>
+        <td>${Formato.inteiro(linha.cubica)}</td>
+        <td>${Formato.inteiro(linha.quadratica)}</td>
+        <td>${Formato.decimal(linha.cubica / linha.quadratica)}×</td>
+        <td>${Formato.tempo(linha.tempoCubica)}</td>
+        <td>${Formato.tempo(linha.tempoQuadratica)}</td>
+      </tr>`).join("");
+  }
+
+  function renderizarCorrida(n) {
+    const total = Teoria.somasCubicas(n);
+    const linhas = [
+      { classe: "cubic", nome: "Cúbica", teorico: total, observado: faixaCubica.estado.somas },
+      { classe: "quad", nome: "Quadrática", teorico: Teoria.somasQuadraticas(n), observado: faixaQuadratica.estado.somas }
+    ];
+    elementos.race.innerHTML = linhas.map(({ classe, nome, teorico, observado }) => `
+      <div class="race-row ${classe}">
+        <header><span>${nome}</span><b>${Formato.inteiro(observado)} / ${Formato.inteiro(teorico)} somas</b></header>
+        <div class="race-track">
+          <i class="theory-fill" style="width: ${(teorico / total) * 100}%"></i>
+          <i class="done-fill" style="width: ${(observado / total) * 100}%"></i>
+        </div>
+      </div>`).join("");
+  }
+
+  function renderizarAnalise() {
+    const n = entrada.vetor.length;
+    const cubica = faixaCubica.estado;
+    const quadratica = faixaQuadratica.estado;
+    const razaoObservada = quadratica.somas > 0 && cubica.somas > 0 ? `${Formato.decimal(cubica.somas / quadratica.somas)}×` : "–";
+    const economia = 1 - Teoria.somasQuadraticas(n) / Teoria.somasCubicas(n);
+    elementos.analysisTitle.textContent = `Análise para n = ${Formato.inteiro(n)}`;
+    elementos.ratioValue.textContent = `${Formato.decimal(Teoria.razao(n))}×`;
+    elementos.ratioCaption.textContent = `mais somas na cúbica, pela razão (n + 2)/3. ${Formato.decimal(economia * 100)}% das adições são eliminadas.`;
+    renderizarCorrida(n);
+    elementos.theory.innerHTML = [
+      ["Subvetores S(n)", "n(n+1)/2", Formato.inteiro(Teoria.subvetores(n))],
+      ["Somas cúbica T₃(n)", "n(n+1)(n+2)/6", Formato.inteiro(Teoria.somasCubicas(n))],
+      ["Somas quadrática T₂(n)", "n(n+1)/2", Formato.inteiro(Teoria.somasQuadraticas(n))],
+      ["Razão observada", "somas₃ / somas₂", razaoObservada]
+    ].map(([rotulo, formula, valor]) => `<dt>${rotulo}</dt><dd>${formula}</dd><dd class="value">${valor}</dd>`).join("");
+    elementos.checks.innerHTML = verificacoes(n).map(([texto, ok]) => `<li data-ok="${ok}">${texto}</li>`).join("");
+  }
+
+  function verificacoes(n) {
+    const cubica = faixaCubica.concluida ? faixaCubica.estado : null;
+    const quadratica = faixaQuadratica.concluida ? faixaQuadratica.estado : null;
+    const mesmoResultado = cubica && quadratica
+      ? cubica.melhor.soma === quadratica.melhor.soma && cubica.melhor.inicio === quadratica.melhor.inicio && cubica.melhor.fim === quadratica.melhor.fim
+      : null;
+    const lista = [
+      ["Mesma soma máxima e mesmo intervalo nas duas abordagens", mesmoResultado],
+      [`Somas da cúbica = T₃(${n}) e subvetores = S(${n})`, cubica ? cubica.somas === Teoria.somasCubicas(n) && cubica.subvetores === Teoria.subvetores(n) : null],
+      [`Somas da quadrática = T₂(${n}) e subvetores = S(${n})`, quadratica ? quadratica.somas === Teoria.somasQuadraticas(n) && quadratica.subvetores === Teoria.subvetores(n) : null]
+    ];
+    if (entrada.esperado) {
+      const { soma, inicio, fim } = entrada.esperado;
+      const finalizada = cubica || quadratica;
+      const confere = finalizada ? finalizada.melhor.soma === soma && finalizada.melhor.inicio === inicio && finalizada.melhor.fim === fim : null;
+      lista.push([`Resultado esperado: soma ${Formato.sinal(soma)} em ${Formato.intervalo(inicio, fim)}`, confere]);
+    }
+    return lista.map(([texto, ok]) => [texto, ok === null ? "pending" : String(ok)]);
+  }
+
+  function aplicarModo(modo) {
+    faixaCubica.definirVisivel(modo !== "quadratica");
+    faixaQuadratica.definirVisivel(modo !== "cubica");
+  }
+
+  function aplicarVisao(visao) {
+    elementos.lanes.hidden = visao !== "simulacao";
+    elementos.analysis.hidden = visao !== "analise";
+  }
+
+  function alternarVisao() {
+    const proxima = selecionado("view") === "simulacao" ? "analise" : "simulacao";
+    marcar("view", proxima);
+    aplicarVisao(proxima);
+  }
+
+  function montarCenas() {
+    elementos.sceneTotal.textContent = CENAS.length;
+    elementos.sceneList.innerHTML = CENAS.map((cena, indice) => `
+      <li><button type="button" data-scene="${indice}" title="${cena.titulo}">${indice + 1}</button></li>`).join("");
+  }
+
+  function marcarCenaAtual() {
+    elementos.sceneList.querySelectorAll("button").forEach((botao) => {
+      if (Number(botao.dataset.scene) === cenaAtual) botao.setAttribute("aria-current", "step");
+      else botao.removeAttribute("aria-current");
+    });
+    elementos.prev.disabled = cenaAtual === 0;
+    elementos.next.disabled = cenaAtual === CENAS.length - 1;
+  }
+
+  function aplicarCena(indice) {
+    cenaAtual = Math.min(CENAS.length - 1, Math.max(0, indice));
+    const cena = CENAS[cenaAtual];
+    elementos.sceneNumber.textContent = cenaAtual + 1;
+    elementos.sceneTitle.textContent = cena.titulo;
+    elementos.sceneText.textContent = cena.texto;
+    marcarCenaAtual();
+    elementos.speed.value = cena.velocidade;
+    descreverVelocidade();
+    marcar("mode", cena.modo);
+    aplicarModo(cena.modo);
+    marcar("view", cena.visao);
+    aplicarVisao(cena.visao);
+    const mesmaEntrada = entrada && entrada.chave === cena.entrada && lerSemente() === SEMENTE_PADRAO;
+    if (cena.manterEstado && mesmaEntrada) return;
+    elementos.seed.value = SEMENTE_PADRAO;
+    elementos.dataset.value = cena.entrada;
+    carregarEntrada();
+  }
+
+  function renderizar() {
+    if (selecionado("view") === "simulacao") {
+      faixas.filter((faixa) => !faixa.elemento.hidden).forEach((faixa) => faixa.renderizar(simulador.executando));
+    } else {
+      renderizarAnalise();
+    }
+    elementos.play.textContent = simulador.executando ? "Pausar" : "Executar";
+    const terminou = !simulador.pendentes().length;
+    elementos.play.disabled = terminou;
+    elementos.step.disabled = terminou;
+    elementos.finish.disabled = terminou;
+  }
+
+  function alternarTelaCheia() {
+    const pedido = document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.();
+    pedido?.catch(() => {});
+  }
+
+  const CHAVE_DO_TEMA = "simulador-soma-maxima-tema";
+
+  function temaAtual() {
+    const definido = document.documentElement.dataset.theme;
+    if (definido === "dark" || definido === "light") return definido;
+    return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function aplicarTema(tema) {
+    document.documentElement.dataset.theme = tema;
+    atualizarBotaoDeTema();
+  }
+
+  function alternarTema() {
+    const proximo = temaAtual() === "dark" ? "light" : "dark";
+    aplicarTema(proximo);
+    try {
+      localStorage.setItem(CHAVE_DO_TEMA, proximo);
+    } catch {}
+  }
+
+  function restaurarTema() {
+    try {
+      const salvo = localStorage.getItem(CHAVE_DO_TEMA);
+      if (salvo === "dark" || salvo === "light") aplicarTema(salvo);
+    } catch {}
+  }
+
+  function atualizarBotaoDeTema() {
+    elementos.theme.textContent = temaAtual() === "dark" ? "Modo claro" : "Modo escuro";
+  }
+
+  function alternarAjuda(aberta) {
+    elementos.help.hidden = !aberta;
+    if (aberta) elementos.helpClose.focus();
+  }
+
+  function vincularEventos() {
+    elementos.dataset.addEventListener("change", carregarEntrada);
+    elementos.seed.addEventListener("change", carregarEntrada);
+    elementos.speed.addEventListener("input", descreverVelocidade);
+    elementos.play.addEventListener("click", () => simulador.alternar());
+    elementos.step.addEventListener("click", () => simulador.passo());
+    elementos.finish.addEventListener("click", () => simulador.concluir());
+    elementos.reset.addEventListener("click", carregarEntrada);
+    elementos.prev.addEventListener("click", () => aplicarCena(cenaAtual - 1));
+    elementos.next.addEventListener("click", () => aplicarCena(cenaAtual + 1));
+    elementos.sceneList.addEventListener("click", (evento) => {
+      const botao = evento.target.closest("button[data-scene]");
+      if (botao) aplicarCena(Number(botao.dataset.scene));
+    });
+    elementos.fullscreen.addEventListener("click", alternarTelaCheia);
+    elementos.theme.addEventListener("click", alternarTema);
+    elementos.helpOpen.addEventListener("click", () => alternarAjuda(true));
+    elementos.helpClose.addEventListener("click", () => alternarAjuda(false));
+    elementos.help.addEventListener("click", (evento) => {
+      if (evento.target === elementos.help) alternarAjuda(false);
+    });
+    document.querySelectorAll('input[name="mode"]').forEach((opcao) => opcao.addEventListener("change", () => aplicarModo(opcao.value)));
+    document.querySelectorAll('input[name="view"]').forEach((opcao) => opcao.addEventListener("change", () => aplicarVisao(opcao.value)));
+    elementos.toolbar.addEventListener("submit", (evento) => evento.preventDefault());
+    elementos.toolbar.addEventListener("mousedown", (evento) => {
+      if (evento.target.closest("button")) evento.preventDefault();
+    });
+    elementos.toolbar.addEventListener("change", (evento) => {
+      if (evento.target.matches("select, input[type='radio'], input[type='range']")) evento.target.blur();
+    });
+    document.addEventListener("keydown", atalhos);
+  }
+
+  const ACOES_DE_TECLA = {
+    " ": () => simulador.alternar(),
+    ArrowRight: () => simulador.passo(),
+    PageDown: () => aplicarCena(cenaAtual + 1),
+    ArrowDown: () => aplicarCena(cenaAtual + 1),
+    PageUp: () => aplicarCena(cenaAtual - 1),
+    ArrowUp: () => aplicarCena(cenaAtual - 1),
+    c: () => simulador.concluir(),
+    r: () => carregarEntrada(),
+    a: () => alternarVisao(),
+    f: () => alternarTelaCheia(),
+    t: () => alternarTema(),
+    "+": () => ajustarVelocidade(6),
+    "=": () => ajustarVelocidade(6),
+    "-": () => ajustarVelocidade(-6),
+    "?": () => alternarAjuda(elementos.help.hidden),
+    h: () => alternarAjuda(elementos.help.hidden)
+  };
+
+  function atalhos(evento) {
+    if (evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if (evento.key === "Escape") {
+      alternarAjuda(false);
+      elementos.settings.open = false;
+      return;
+    }
+    if (evento.target.matches("input[type='number'], select")) return;
+    if (evento.target.matches("button") && (evento.key === " " || evento.key === "Enter")) return;
+    const tecla = evento.key.length === 1 ? evento.key.toLowerCase() : evento.key;
+    const numero = Number(tecla);
+    if (Number.isInteger(numero) && numero >= 1 && numero <= CENAS.length) {
+      evento.preventDefault();
+      aplicarCena(numero - 1);
+      return;
+    }
+    const acao = ACOES_DE_TECLA[tecla];
+    if (!acao) return;
+    evento.preventDefault();
+    acao();
+  }
+
+  return {
+    iniciar() {
+      restaurarTema();
+      Tema.aoMudar(atualizarBotaoDeTema);
+      Tema.iniciar();
+      atualizarBotaoDeTema();
+      faixas = [new Faixa("cubica", elementos.lanes), new Faixa("quadratica", elementos.lanes)];
+      [faixaCubica, faixaQuadratica] = faixas;
+      simulador = new Simulador(faixas, renderizar);
+      montarCenas();
+      vincularEventos();
+      aplicarCena(0);
+    }
+  };
+})();
+
+Interface.iniciar();
+</script>
+
+</body></html>
